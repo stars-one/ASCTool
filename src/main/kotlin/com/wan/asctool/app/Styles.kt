@@ -1,14 +1,12 @@
 package com.wan.asctool.app
 
 import javafx.scene.text.FontWeight
-import tornadofx.Stylesheet
-import tornadofx.box
-import tornadofx.cssclass
-import tornadofx.px
+import tornadofx.*
 
 class Styles : Stylesheet() {
     companion object {
         val heading by cssclass()
+        val mybutton by cssclass()
     }
 
     init {
@@ -16,6 +14,17 @@ class Styles : Stylesheet() {
             padding = box(10.px)
             fontSize = 20.px
             fontWeight = FontWeight.BOLD
+        }
+        button {
+            and(mybutton) {
+                backgroundColor += c("#66bef1")
+                textFill = c("white")
+                and(hover) {
+                    backgroundColor += c("#435aee")
+                }
+
+            }
+
         }
     }
 }
