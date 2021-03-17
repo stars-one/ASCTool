@@ -1,5 +1,7 @@
 package com.wan.asctool.controller
 
+import bin.signer.ApkSigner
+import bin.signer.key.KeystoreKey
 import cc.binmt.signature.ASCTool
 import tornadofx.*
 import java.io.File
@@ -19,6 +21,50 @@ class MainController : Controller() {
         val file = File(javaClass.classLoader.getResource("").toURI())
         println(file.path)
     }
+
+    /**
+     * 重新签名
+     */
+    fun reSignApk(srcApkPath: String, outApkPath: String, option: Int) {
+        //使用自定义签名文件设置签名
+        val apkFile = File(srcApkPath)
+        val outputApkFile = File(outApkPath)
+
+        //获取签名文件及相关密码信息,使用strList存放
+        val strList = arrayListOf<String>()
+
+        if (option == 1) {
+            //保存自动签名的选择option
+            val lists = arrayListOf("my-keyFilePath", "my-password", "my-alias", "my-aliasPassword")
+            lists.forEach {
+                strList.add(config.string(it, ""))
+            }
+
+        } else {
+            //使用默认测试签名文件进行签名
+            val resourceAsStream = javaClass.classLoader.getResourceAsStream("config.properties")
+            val properties = Properties()
+            properties.load(resourceAsStream)
+
+            val lists = arrayListOf("keyFilePath", "password", "alias", "aliasPassword")
+            val map = properties.toMutableMap()
+
+            lists.forEach {
+                strList.add(map[it].toString())
+            }
+        }
+
+        val signFilePath = strList[0]
+        val signPwd = strList[1]
+        val signAlias = strList[2]
+        val signAliasPwd = strList[3]
+
+        val keystoreKey = KeystoreKey(signFilePath, signPwd, signAlias, signAliasPwd)
+
+        ApkSigner.signApk(apkFile, outputApkFile, keystoreKey, null)
+
+    }
+
     /**
      * 开始签名破解
      */
@@ -34,7 +80,7 @@ class MainController : Controller() {
 
         val map = properties.toMutableMap()
         when (option) {
-        //使用默认签名
+            //使用默认签名
             0 -> {
                 //删除map中不需要的配置数据
                 map.remove("option")
@@ -53,9 +99,9 @@ class MainController : Controller() {
                 }
                 //签名验证破解
                 val keyFileInputSteam = javaClass.classLoader.getResourceAsStream(infoMap["keyFilePath"])
-                ASCTool(srcApkPath, outApkPath,keyFileInputSteam ,infoMap).startTask()
+                ASCTool(srcApkPath, outApkPath, keyFileInputSteam, infoMap).startTask()
             }
-        //使用自定义签名文件进行签名
+            //使用自定义签名文件进行签名
             1 -> {
                 val infoMap = hashMapOf<String, String>()
                 infoMap.apply {
@@ -65,7 +111,7 @@ class MainController : Controller() {
                 }
                 ASCTool(srcApkPath, outApkPath, infoMap).startTask()
             }
-        //不自动签名
+            //不自动签名
             2 -> {
                 ASCTool(srcApkPath, outApkPath).startTask()
             }

@@ -1,6 +1,7 @@
 package com.wan.asctool.view
 
 import com.wan.asctool.app.Styles
+import com.wan.asctool.controller.MainController
 import com.wan.asctool.util.chooseSignFile
 import com.wan.asctool.util.validateSignFile
 import javafx.geometry.Pos
@@ -10,6 +11,7 @@ import tornadofx.*
 import java.io.File
 import java.io.FileWriter
 import java.util.*
+import java.util.jar.JarFile
 
 /**
  *
@@ -24,7 +26,7 @@ class SignMessageInputView : View("输入自定义签名文件信息") {
     var aliasTf by singleAssign<TextField>()
     var aliasPasswordTf by singleAssign<TextField>()
 
-
+    val mainController: MainController by inject()
 
     override fun onDock() {
         loadProperties()
@@ -73,35 +75,25 @@ class SignMessageInputView : View("输入自定义签名文件信息") {
 
 
     fun loadProperties() {
-        val pro = Properties()
-        pro.load(resources.stream("/config.properties"))
-        val lists = listOf("my-keyFilePath", "my-password", "my-alias", "my-aliasPassword")
+        val config = mainController.config
         val controlList = listOf(keyFilePathTf, passwordTf, aliasTf, aliasPasswordTf)
-        val map = pro.toMap()
-        if (map.containsKey(lists[0])) {
-            for (i in 0..3) {
-                controlList[i].text = map[lists[i]].toString()
-            }
+        val lists = listOf("my-keyFilePath", "my-password", "my-alias", "my-aliasPassword")
+        lists.forEachIndexed { index, s ->
+            controlList[index].text = config.string(s,"")
         }
 
     }
 
     fun writeProperties() {
-        val pro = Properties()
-        val stream = resources.stream("/config.properties")
-        pro.load(stream)
+
+        val config = mainController.config
         val controlList = listOf(keyFilePathTf, passwordTf, aliasTf, aliasPasswordTf)
         val lists = listOf("my-keyFilePath", "my-password", "my-alias", "my-aliasPassword")
 
-        val hashMap = hashMapOf<String, String>()
-        hashMap.apply {
-            for (i in 0..3) {
-                this[lists[i]] = controlList[i].text
-            }
+        lists.forEachIndexed { index, s ->
+            config[s] = controlList[index].text
         }
-        pro.plusAssign(hashMap)
-        //把属性写出到文件
-        val writer = FileWriter(File(resources.url("/config.properties").toURI()))
-        pro.store(writer,"增加的属性")
+        config.save()
+
     }
 }

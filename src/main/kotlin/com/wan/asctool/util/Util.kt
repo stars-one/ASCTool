@@ -38,7 +38,7 @@ fun validateSignFile(control: Control, property: StringProperty): Boolean {
 
         when {
             it.isNullOrBlank() -> error("此项是不能为空！！")
-            File(it).extension == "keysotre" || File(it).extension == "jks" -> null
+            File(it).extension == "keystore" || File(it).extension == "jks" -> null
             else -> error("请输入正确的文件路径")
         }
     }

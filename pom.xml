@@ -36,6 +36,13 @@
             <artifactId>kfoenix</artifactId>
             <version>0.1.3</version>
         </dependency>
+        <dependency>
+            <groupId>com.wan</groupId>
+            <artifactId>asctool</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/ASCTool.jar</systemPath>
+        </dependency>
     </dependencies>
 
     <build>

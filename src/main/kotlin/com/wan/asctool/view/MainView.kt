@@ -14,9 +14,10 @@ import kfoenix.jfxradiobutton
 import tornadofx.*
 import java.io.*
 
+
 class MainView : View() {
 
-    val maincontroller: MainController by inject()
+    val mainController: MainController by inject()
     var srcApkFile: TextField by singleAssign()
     var outApkFile: TextField by singleAssign()
 
@@ -49,7 +50,16 @@ class MainView : View() {
             fieldset {
                 field("需要处理的apk") {
                     srcApkFile = textfield {
-
+                        promptText = "可拖动文件到这"
+                        isFocusTraversable = false
+                        setOnDragExited {
+                            val files = it.getDragboard().getFiles()
+                            //获得文件
+                            val file = files[0]
+                            if (file.extension == "apk") {
+                                srcApkFile.text = file.path
+                            }
+                        }
                     }
 
                     jfxbutton {
@@ -66,6 +76,7 @@ class MainView : View() {
 
                 field("输出apk名字") {
                     outApkFile = textfield {
+                        isFocusTraversable = false
                         promptText = "输出路径与输入路径相同，默认为out.apk"
                     }
                 }
@@ -103,28 +114,15 @@ class MainView : View() {
 
                     }
                 }
+                text("重签名apk会覆盖原本的签名,当然,也可以直接对一个未签名的apk签名")
                 field {
-                    hbox {
+                    hbox(20) {
                         alignment = Pos.CENTER
                         jfxbutton("破解签名验证") {
                             addClass(Styles.mybutton)
-                            setOnAction {
-                                textarea.clear()
 
-                                /* val stream = ByteArrayOutputStream()
-                                 System.setOut(PrintStream(stream))
-                                 var text: String
-                                 runAsync {
-                                     for (i in 1..10) {
-                                         Thread.sleep(200)
-                                         println("$i")
-                                         text = String(stream.toByteArray())
-                                         stream.reset()
-                                         if (text.isNotEmpty()) {
-                                             textarea.appendText(text)
-                                         }
-                                     }
-                                 }*/
+                            action {
+                                textarea.clear()
 
                                 //验证通过则进行解密
                                 if (validateApkFile(srcApkFile, srcApkFile.textProperty())) {
@@ -142,12 +140,11 @@ class MainView : View() {
                                     val stream = ByteArrayOutputStream()
                                     System.setOut(PrintStream(stream))
 
-//                                    val queue = ArrayBlockingQueue<String>(10)
                                     var lines: List<String>
                                     runAsync {
                                         //进行解密
                                         textarea.appendText("正在处理，请稍候...\n")
-                                        maincontroller.startTask(srcPath, outPath, option)
+                                        mainController.startTask(srcPath, outPath, option)
                                         val bf = BufferedReader(InputStreamReader(ByteArrayInputStream(stream.toByteArray())))
                                         lines = bf.readLines()
 
@@ -156,11 +153,39 @@ class MainView : View() {
                                             Thread.sleep(200)
                                         }
                                     } ui {
-
                                         textarea.appendText("签名破解已成功！")
                                     }
 
                                 }
+                            }
+                        }
+                        jfxbutton("apk重签名") {
+                            addClass(Styles.mybutton)
+
+                            action {
+                                textarea.clear()
+                                textarea.appendText("重新签名...\n")
+                                if (validateApkFile(srcApkFile, srcApkFile.textProperty())) {
+                                    val srcPath = srcApkFile.text
+                                    val parentPath = File(srcPath).parent
+                                    var outPath = File(parentPath, "out.apk").path
+                                    val outPathText = outApkFile.text
+                                    if (!outPathText.isNullOrBlank()) {
+                                        outPath = if (outPathText.endsWith(".apk")) {
+                                            File(parentPath, outPathText).path
+                                        } else {
+                                            File(parentPath, "$outPathText.apk").path
+                                        }
+                                    }
+
+                                    runAsync {
+                                        mainController.reSignApk(srcPath, outPath, option)
+                                    } ui {
+                                        textarea.appendText("重新签名完毕...\n")
+                                    }
+
+                                }
+
                             }
                         }
                     }

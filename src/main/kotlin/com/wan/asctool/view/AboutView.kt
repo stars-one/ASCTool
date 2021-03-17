@@ -62,7 +62,7 @@ class AboutView : View("关于") {
                         }
                     }
                     field("我的博客") {
-                        hyperlink("https://www.cnblogs.com/kexing") {
+                        hyperlink("https://www.cnblogs.com/stars-one") {
                             action {
                                 Desktop.getDesktop().browse(URI(this.text))
                             }
