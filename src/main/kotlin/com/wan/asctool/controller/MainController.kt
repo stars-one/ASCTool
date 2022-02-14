@@ -3,9 +3,13 @@ package com.wan.asctool.controller
 import bin.signer.ApkSigner
 import bin.signer.key.KeystoreKey
 import cc.binmt.signature.ASCTool
+import com.android.apksigner.ApkSignerTool
 import tornadofx.*
+import java.io.BufferedReader
 import java.io.File
+import java.io.InputStreamReader
 import java.util.*
+
 
 /**
  *
@@ -25,7 +29,7 @@ class MainController : Controller() {
     /**
      * 重新签名
      */
-    fun reSignApk(srcApkPath: String, outApkPath: String, option: Int) {
+    fun reSignApk(srcApkPath: String, outApkPath: String, option: Int, signVersion: Int = 1) :String{
         //使用自定义签名文件设置签名
         val apkFile = File(srcApkPath)
         val outputApkFile = File(outApkPath)
@@ -45,7 +49,6 @@ class MainController : Controller() {
             val resourceAsStream = javaClass.classLoader.getResourceAsStream("config.properties")
             val properties = Properties()
             properties.load(resourceAsStream)
-
             val lists = arrayListOf("keyFilePath", "password", "alias", "aliasPassword")
             val map = properties.toMutableMap()
 
@@ -63,12 +66,61 @@ class MainController : Controller() {
 
         ApkSigner.signApk(apkFile, outputApkFile, keystoreKey, null)
 
+        if (signVersion == 1) {
+            //v2签名
+            return v2SignApk(outApkPath, strList)
+        }
+        return ""
+
+    }
+
+    /**
+     * v2签名
+     */
+    fun v2SignApk(srcApkPath: String, strList: List<String>):String {
+        val srcFile = File(srcApkPath)
+        val tempFile = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_temp" + ".apk")
+        val outputApk = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_v2" + ".apk")
+
+        //zip对齐
+        val progress = Runtime.getRuntime().exec("D:\\app\\dev\\Android\\SDK\\build-tools\\28.0.3\\zipalign.exe -v 4 ${srcApkPath} ${tempFile.path}")
+
+        val br = BufferedReader(InputStreamReader(progress.inputStream))
+        //StringBuffer b = new StringBuffer();
+        var line: String? = null
+        val b = StringBuffer()
+        while (br.readLine().also { line = it } != null) {
+            b.appendln(line)
+        }
+
+        val signFilePath = strList[0]
+        val signPwd = strList[1]
+        val signAlias = strList[2]
+        val signAliasPwd = strList[3]
+
+        val str = """sign --ks $signFilePath --ks-pass pass:${signPwd} --ks-key-alias ${signAlias} --key-pass pass:${signAliasPwd} --out ${outputApk.path} ${tempFile.path}
+        """.trimMargin()
+        b.appendln()
+        b.appendln(str)
+
+        val paramArray = str.split(" ").toTypedArray()
+        ApkSignerTool.main(paramArray)
+
+        //校验下签名
+        ApkSignerTool.main(arrayOf("verify", "-v", outputApk.path))
+
+        //删除对齐的那个apk文件
+        System.gc()
+        tempFile.delete()
+        srcFile.delete()
+
+        return b.toString()
     }
 
     /**
      * 开始签名破解
      */
-    fun startTask(srcApkPath: String, outApkPath: String, option: Int) {
+    fun startTask(srcApkPath: String, outApkPath: String, option: Int, signVersion: Int = 1) {
         val resourceAsStream = javaClass.classLoader.getResourceAsStream("config.properties")
 
         val properties = Properties()
@@ -79,6 +131,9 @@ class MainController : Controller() {
         val lists = arrayListOf("my-keyFilePath", "my-password", "my-alias", "my-aliasPassword")
 
         val map = properties.toMutableMap()
+        //转为Map<String,String>类型 固定顺序
+        val infoMap = linkedMapOf<String, String>()
+
         when (option) {
             //使用默认签名
             0 -> {
@@ -89,8 +144,6 @@ class MainController : Controller() {
                         map.remove(key)
                     }
                 }
-                //转为Map<String,String>类型
-                val infoMap = hashMapOf<String, String>()
                 infoMap.apply {
                     val entries = map.entries
                     for (entry in entries) {
@@ -114,6 +167,14 @@ class MainController : Controller() {
             //不自动签名
             2 -> {
                 ASCTool(srcApkPath, outApkPath).startTask()
+            }
+        }
+
+
+        if (option == 0 || option == 1) {
+            //是否v2签名
+            if (signVersion == 2) {
+                v2SignApk(srcApkPath,infoMap.values.toList())
             }
         }
 

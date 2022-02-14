@@ -27,6 +27,7 @@ class MainView : View() {
     var textarea by singleAssign<TextArea>()
 
     var option = 0
+    var signVersion = 1 //默认v1+v2
 
 
     init {
@@ -52,6 +53,8 @@ class MainView : View() {
                     srcApkFile = textfield {
                         promptText = "可拖动文件到这"
                         isFocusTraversable = false
+                        text = "D:\\temp\\test.apk"
+
                         setOnDragExited {
                             val files = it.getDragboard().getFiles()
                             //获得文件
@@ -104,6 +107,7 @@ class MainView : View() {
                         }
                     }
                 }
+
                 settingSign = field("设置签名文件") {
                     isDisable = true
                     setSignButton = jfxbutton("设置签名文件") {
@@ -114,7 +118,25 @@ class MainView : View() {
 
                     }
                 }
+
+                field("签名版本") {
+                    togglegroup {
+                        jfxradiobutton("v1") {
+                            setOnAction {
+                                signVersion = 0
+                            }
+                        }
+                        jfxradiobutton("v1+v2+v3") {
+                            isSelected = true
+                            setOnAction {
+                                signVersion = 1
+                            }
+                        }
+                    }
+                }
+
                 text("重签名apk会覆盖原本的签名,当然,也可以直接对一个未签名的apk签名")
+
                 field {
                     hbox(20) {
                         alignment = Pos.CENTER
@@ -144,7 +166,7 @@ class MainView : View() {
                                     runAsync {
                                         //进行解密
                                         textarea.appendText("正在处理，请稍候...\n")
-                                        mainController.startTask(srcPath, outPath, option)
+                                        mainController.startTask(srcPath, outPath, option,signVersion)
                                         val bf = BufferedReader(InputStreamReader(ByteArrayInputStream(stream.toByteArray())))
                                         lines = bf.readLines()
 
@@ -179,8 +201,9 @@ class MainView : View() {
                                     }
 
                                     runAsync {
-                                        mainController.reSignApk(srcPath, outPath, option)
+                                        mainController.reSignApk(srcPath, outPath, option,signVersion)
                                     } ui {
+                                        textarea.appendText(it)
                                         textarea.appendText("重新签名完毕...\n")
                                     }
 
