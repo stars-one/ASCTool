@@ -4,6 +4,8 @@ import com.jfoenix.controls.JFXButton
 import com.wan.asctool.app.Styles
 import com.wan.asctool.controller.MainController
 import com.wan.asctool.util.chooseApkFile
+import com.wan.asctool.util.getCurrentJarPath
+import com.wan.asctool.util.isWin
 import com.wan.asctool.util.validateApkFile
 import javafx.geometry.Pos
 import javafx.scene.control.TextArea
@@ -166,7 +168,7 @@ class MainView : View() {
                                     runAsync {
                                         //进行解密
                                         textarea.appendText("正在处理，请稍候...\n")
-                                        mainController.startTask(srcPath, outPath, option,signVersion)
+                                        mainController.startTask(srcPath, outPath, option, signVersion)
                                         val bf = BufferedReader(InputStreamReader(ByteArrayInputStream(stream.toByteArray())))
                                         lines = bf.readLines()
 
@@ -201,7 +203,7 @@ class MainView : View() {
                                     }
 
                                     runAsync {
-                                        mainController.reSignApk(srcPath, outPath, option,signVersion)
+                                        mainController.reSignApk(srcPath, outPath, option, signVersion)
                                     } ui {
                                         textarea.appendText(it)
                                         textarea.appendText("重新签名完毕...\n")
@@ -210,6 +212,10 @@ class MainView : View() {
                                 }
 
                             }
+                        }
+                        button("test").action {
+
+
                         }
                     }
                 }

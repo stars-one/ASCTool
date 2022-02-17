@@ -4,6 +4,8 @@ import bin.signer.ApkSigner
 import bin.signer.key.KeystoreKey
 import cc.binmt.signature.ASCTool
 import com.android.apksigner.ApkSignerTool
+import com.wan.asctool.util.getCurrentJarPath
+import com.wan.asctool.util.isWin
 import tornadofx.*
 import java.io.BufferedReader
 import java.io.File
@@ -82,8 +84,13 @@ class MainController : Controller() {
         val tempFile = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_temp" + ".apk")
         val outputApk = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_v2" + ".apk")
 
+
+        //todo 需要调整
+        val zalipPath = getZalipPath()
+
         //zip对齐
-        val progress = Runtime.getRuntime().exec("D:\\app\\dev\\Android\\SDK\\build-tools\\28.0.3\\zipalign.exe -v 4 ${srcApkPath} ${tempFile.path}")
+        //val zalipPath = "D:\\app\\dev\\Android\\SDK\\build-tools\\28.0.3\\zipalign.exe"
+        val progress = Runtime.getRuntime().exec("$zalipPath -p -f -v 4 $srcApkPath ${tempFile.path}")
 
         val br = BufferedReader(InputStreamReader(progress.inputStream))
         //StringBuffer b = new StringBuffer();
@@ -115,6 +122,29 @@ class MainController : Controller() {
         srcFile.delete()
 
         return b.toString()
+    }
+
+    private fun getZalipPath():String {
+        val zipalignPath = if (isWin()) "/util/zipalign.exe" else "/util/zipalign"
+        val fileName = if (isWin()) "zipalign.exe" else "zipalign"
+
+        val fileUrl = resources.url("/img/file.png")
+
+        val result = if (fileUrl.path.contains("!/")) {
+            //是jar包打开
+            val currentJarPath = getCurrentJarPath(fileUrl)
+            val file = File(currentJarPath.parent, fileName)
+            if (!file.exists()) {
+                file.writeBytes(resources.stream(zipalignPath).readBytes())
+            }
+            file.path
+        } else {
+            val filePath = resources.url(zipalignPath).file
+            val file = File(filePath)
+            file.path
+        }
+        println("ZalipPath : $result")
+        return result
     }
 
     /**
@@ -151,7 +181,7 @@ class MainController : Controller() {
                     }
                 }
                 //签名验证破解
-                val keyFileInputSteam = javaClass.classLoader.getResourceAsStream(infoMap["keyFilePath"])
+                val keyFileInputSteam = resources.stream(infoMap["keyFilePath"]?: "")
                 ASCTool(srcApkPath, outApkPath, keyFileInputSteam, infoMap).startTask()
             }
             //使用自定义签名文件进行签名
