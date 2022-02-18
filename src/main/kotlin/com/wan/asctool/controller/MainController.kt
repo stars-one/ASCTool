@@ -59,11 +59,27 @@ class MainController : Controller() {
             }
         }
 
-        val signFilePath = strList[0]
+        var signFilePath = strList[0]
         val signPwd = strList[1]
         val signAlias = strList[2]
         val signAliasPwd = strList[3]
 
+        val fileUrl = resources.url("/img/file.png")
+        signFilePath = if (fileUrl.path.contains("!/")) {
+            //是jar包打开
+            val currentJarPath = getCurrentJarPath(fileUrl)
+
+            val file = File(currentJarPath.parent, signFilePath)
+            if (!file.exists()) {
+                file.writeBytes(resources.stream("/"+signFilePath).readBytes())
+            }
+            file.path
+        } else {
+            val filePath = resources.url("/"+signFilePath).file
+            val file = File(filePath)
+            file.path
+        }
+        println("jks文件: $signFilePath")
         val keystoreKey = KeystoreKey(signFilePath, signPwd, signAlias, signAliasPwd)
 
         ApkSigner.signApk(apkFile, outputApkFile, keystoreKey, null)
