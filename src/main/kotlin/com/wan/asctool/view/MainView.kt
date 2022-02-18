@@ -55,7 +55,6 @@ class MainView : View() {
                     srcApkFile = textfield {
                         promptText = "可拖动文件到这"
                         isFocusTraversable = false
-                        text = "D:\\temp\\test.apk"
 
                         setOnDragExited {
                             val files = it.getDragboard().getFiles()
