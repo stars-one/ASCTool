@@ -26,7 +26,7 @@ APk签名验证破解工具 APK Signature Crack Tool
 
 ## 下载
 
-下载地址： https://stars-one.lanzouq.com/im4nU02ozs0f
+下载地址： https://stars-one.lanzouq.com/iPHYM02p50sb
 
 [码云下载](https://gitee.com/stars-one/ASCTool/attach_files/970115/download/apk%E7%AD%BE%E5%90%8D%E7%A0%B4%E8%A7%A3%E5%B7%A5%E5%85%B7.jar)
 
