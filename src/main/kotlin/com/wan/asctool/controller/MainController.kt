@@ -31,7 +31,7 @@ class MainController : Controller() {
     /**
      * 重新签名
      */
-    fun reSignApk(srcApkPath: String, outApkPath: String, option: Int, signVersion: Int = 1) :String{
+    fun reSignApk(srcApkPath: String, outApkPath: String, option: Int, signVersion: Int = 1): String {
         //使用自定义签名文件设置签名
         val apkFile = File(srcApkPath)
         val outputApkFile = File(outApkPath)
@@ -66,16 +66,19 @@ class MainController : Controller() {
 
         val fileUrl = resources.url("/img/file.png")
         signFilePath = if (fileUrl.path.contains("!/")) {
-            //是jar包打开
-            val currentJarPath = getCurrentJarPath(fileUrl)
-
-            val file = File(currentJarPath.parent, signFilePath)
-            if (!file.exists()) {
-                file.writeBytes(resources.stream("/"+signFilePath).readBytes())
+            if (option == 1) {
+                signFilePath
+            } else {
+                //是jar包打开
+                val currentJarPath = getCurrentJarPath(fileUrl)
+                val file = File(currentJarPath.parent, signFilePath)
+                if (!file.exists()) {
+                    file.writeBytes(resources.stream("/" + signFilePath).readBytes())
+                }
+                file.path
             }
-            file.path
         } else {
-            val filePath = resources.url("/"+signFilePath).file
+            val filePath = resources.url("/" + signFilePath).file
             val file = File(filePath)
             file.path
         }
@@ -95,7 +98,7 @@ class MainController : Controller() {
     /**
      * v2签名
      */
-    fun v2SignApk(srcApkPath: String, strList: List<String>):String {
+    fun v2SignApk(srcApkPath: String, strList: List<String>): String {
         val srcFile = File(srcApkPath)
         val tempFile = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_temp" + ".apk")
         val outputApk = File(srcFile.parentFile, srcFile.nameWithoutExtension + "_v2" + ".apk")
@@ -140,7 +143,7 @@ class MainController : Controller() {
         return b.toString()
     }
 
-    private fun getZalipPath():String {
+    private fun getZalipPath(): String {
         val zipalignPath = if (isWin()) "/util/zipalign.exe" else "/util/zipalign"
         val fileName = if (isWin()) "zipalign.exe" else "zipalign"
 
@@ -197,7 +200,7 @@ class MainController : Controller() {
                     }
                 }
                 //签名验证破解
-                val keyFileInputSteam = resources.stream(infoMap["keyFilePath"]?: "")
+                val keyFileInputSteam = resources.stream(infoMap["keyFilePath"] ?: "")
                 ASCTool(srcApkPath, outApkPath, keyFileInputSteam, infoMap).startTask()
             }
             //使用自定义签名文件进行签名
@@ -220,7 +223,7 @@ class MainController : Controller() {
         if (option == 0 || option == 1) {
             //是否v2签名
             if (signVersion == 2) {
-                v2SignApk(srcApkPath,infoMap.values.toList())
+                v2SignApk(srcApkPath, infoMap.values.toList())
             }
         }
 
